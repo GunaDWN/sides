@@ -94,6 +94,90 @@ class LetterApprovalService
     }
 
     /**
+     * Create a new CUSTOM pengajuan surat (no predefined JenisSurat)
+     * Warga defines their own approval chain.
+     */
+    public function createCustomPengajuan(
+        User $user,
+        string $perihalSurat,
+        array $dokumenData,
+        array $jabatanIds,       // ordered list of jabatan_id for approval chain
+        ?string $catatanPemohon = null,
+        ?string $ipAddress = null,
+        ?string $userAgent = null
+    ): PengajuanSurat {
+        return DB::transaction(function () use ($user, $perihalSurat, $dokumenData, $jabatanIds, $catatanPemohon, $ipAddress, $userAgent) {
+            $nomorPengajuan = 'KUSTOM-' . strtoupper(Str::random(4)) . '-' . date('YmdHis');
+
+            $needsApproval = count($jabatanIds) > 0;
+            $initialStatus = $needsApproval ? StatusPengajuan::MENUNGGU_APPROVAL : StatusPengajuan::SELESAI;
+
+            $pengajuan = PengajuanSurat::create([
+                'nomor_pengajuan' => $nomorPengajuan,
+                'desa_id' => $user->desa_id,
+                'jenis_surat_id' => null,
+                'warga_id' => $user->warga_id,
+                'is_custom' => true,
+                'perihal_surat' => $perihalSurat,
+                'status' => $initialStatus,
+                'tahapan_aktif' => 1,
+                'catatan_pemohon' => $catatanPemohon,
+                'submitted_at' => now(),
+                'completed_at' => $needsApproval ? null : now(),
+                'created_by' => $user->id,
+            ]);
+
+            // Create initial document (v1)
+            PengajuanDokumen::create([
+                'pengajuan_surat_id' => $pengajuan->id,
+                'pengajuan_approval_id' => null,
+                'versi' => 1,
+                'nama_file_asli' => $dokumenData['nama_file_asli'],
+                'file_path' => $dokumenData['file_path'],
+                'file_extension' => $dokumenData['file_extension'] ?? null,
+                'mime_type' => $dokumenData['mime_type'] ?? null,
+                'file_size' => $dokumenData['file_size'] ?? null,
+                'sumber' => 'warga',
+                'uploaded_by' => $user->id,
+                'keterangan' => 'Dokumen awal pengajuan surat kustom.',
+                'is_latest' => true,
+            ]);
+
+            // Create approval steps from warga-defined jabatan list
+            if ($needsApproval) {
+                foreach ($jabatanIds as $index => $jabatanId) {
+                    $jabatan = \App\Models\Jabatan::find($jabatanId);
+                    $urutan = $index + 1;
+                    $isFirstStep = ($urutan === 1);
+
+                    PengajuanApproval::create([
+                        'pengajuan_surat_id' => $pengajuan->id,
+                        'jabatan_id' => $jabatanId,
+                        'nama_jabatan_snapshot' => $jabatan?->nama ?? 'Jabatan',
+                        'urutan' => $urutan,
+                        'status' => $isFirstStep ? StatusApproval::AKTIF : StatusApproval::MENUNGGU,
+                        'activated_at' => $isFirstStep ? now() : null,
+                    ]);
+                }
+            }
+
+            // Write Log
+            PengajuanLog::create([
+                'pengajuan_surat_id' => $pengajuan->id,
+                'user_id' => $user->id,
+                'action' => 'SUBMIT_PENGAJUAN_KUSTOM',
+                'status_sebelum' => StatusPengajuan::DRAFT->value,
+                'status_sesudah' => $initialStatus->value,
+                'komentar' => 'Pengajuan surat kustom: ' . $perihalSurat,
+                'ip_address' => $ipAddress,
+                'user_agent' => $userAgent,
+            ]);
+
+            return $pengajuan;
+        });
+    }
+
+    /**
      * Process Pejabat Decision (Terima, Tolak, Ulangi)
      */
     public function processApproval(

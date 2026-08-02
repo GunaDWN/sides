@@ -14,8 +14,16 @@
             <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 space-y-4">
                 <h3 class="text-sm font-bold text-slate-900 uppercase tracking-wider border-b border-slate-100 pb-2">Informasi Pengajuan</h3>
                 <div class="grid grid-cols-2 gap-4 text-sm">
-                    <div><span class="text-xs text-slate-400 block">Jenis Surat</span><span class="font-bold text-slate-900">{{ $pengajuan->jenisSurat->nama }}</span></div>
-                    <div><span class="text-xs text-slate-400 block">Kategori</span><span class="text-slate-700">{{ $pengajuan->jenisSurat->kategori ?? '-' }}</span></div>
+                    <div>
+                        <span class="text-xs text-slate-400 block">Jenis / Perihal Surat</span>
+                        <div class="flex items-center gap-1.5 mt-0.5">
+                            @if($pengajuan->is_custom)
+                                <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-200">Kustom</span>
+                            @endif
+                            <span class="font-bold text-slate-900">{{ $pengajuan->getDisplayName() }}</span>
+                        </div>
+                    </div>
+                    <div><span class="text-xs text-slate-400 block">Kategori</span><span class="text-slate-700">{{ $pengajuan->jenisSurat->kategori ?? ($pengajuan->is_custom ? 'Pengajuan Mandiri' : '-') }}</span></div>
                     <div><span class="text-xs text-slate-400 block">Tanggal Pengajuan</span><span class="text-slate-700">{{ $pengajuan->submitted_at?->format('d M Y, H:i') ?? $pengajuan->created_at->format('d M Y, H:i') }}</span></div>
                     <div><span class="text-xs text-slate-400 block">Tahapan Aktif</span><span class="font-semibold text-slate-800">Tahap {{ $pengajuan->tahapan_aktif }} dari {{ $pengajuan->approvals->count() }}</span></div>
                 </div>

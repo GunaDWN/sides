@@ -80,12 +80,14 @@
                         </div>
 
                         <div>
-                            <label class="block font-semibold text-slate-700 mb-1">Desa <span class="text-rose-500">*</span></label>
-                            <select wire:model="desa_id" class="w-full text-sm rounded-lg border-slate-300">
-                                @foreach($desasList as $d)
-                                    <option value="{{ $d->id }}">{{ $d->nama }}</option>
-                                @endforeach
-                            </select>
+                            <x-select 
+                                wire:model="desa_id" 
+                                label="Desa" 
+                                placeholder="-- Pilih Desa --"
+                                :options="$desasList"
+                                :searchable="true"
+                                required
+                            />
                         </div>
                     </div>
 

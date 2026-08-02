@@ -75,8 +75,15 @@
                     </div>
                     <div class="grid grid-cols-2 gap-4">
                         <div><label class="block font-semibold text-slate-700 mb-1">Kategori</label><input type="text" wire:model="kategori" class="w-full text-sm rounded-lg border-slate-300" placeholder="Kependudukan, Perekonomian..."></div>
-                        <div><label class="block font-semibold text-slate-700 mb-1">Desa <span class="text-rose-500">*</span></label>
-                            <select wire:model.live="desa_id" class="w-full text-sm rounded-lg border-slate-300">@foreach($desasList as $d)<option value="{{ $d->id }}">{{ $d->nama }}</option>@endforeach</select>
+                        <div>
+                            <x-select 
+                                wire:model.live="desa_id" 
+                                label="Desa" 
+                                placeholder="-- Pilih Desa --"
+                                :options="$desasList"
+                                :searchable="true"
+                                required
+                            />
                         </div>
                     </div>
                     <div><label class="block font-semibold text-slate-700 mb-1">Deskripsi</label><textarea wire:model="deskripsi" rows="2" class="w-full text-sm rounded-lg border-slate-300"></textarea></div>
@@ -96,12 +103,14 @@
                             @foreach($approvalSteps as $index => $step)
                                 <div class="flex items-center gap-3 p-3 rounded-xl bg-slate-50 border border-slate-200">
                                     <span class="w-8 h-8 rounded-full bg-emerald-600 text-white font-bold text-sm flex items-center justify-center flex-shrink-0">{{ $step['urutan'] }}</span>
-                                    <select wire:model="approvalSteps.{{ $index }}.jabatan_id" class="flex-1 text-sm rounded-lg border-slate-300">
-                                        <option value="">-- Pilih Jabatan --</option>
-                                        @foreach($jabatansByDesa as $j)
-                                            <option value="{{ $j->id }}">{{ $j->nama }}</option>
-                                        @endforeach
-                                    </select>
+                                    <div class="flex-1">
+                                        <x-select 
+                                            wire:model="approvalSteps.{{ $index }}.jabatan_id" 
+                                            placeholder="-- Pilih Jabatan --"
+                                            :options="$jabatansByDesa"
+                                            :searchable="true"
+                                        />
+                                    </div>
                                     <button type="button" wire:click="removeApprovalStep({{ $index }})" class="px-2 py-1 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-600 text-xs font-semibold border border-rose-200">&times;</button>
                                 </div>
                             @endforeach

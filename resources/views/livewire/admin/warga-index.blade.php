@@ -79,12 +79,31 @@
                         <div><label class="block font-semibold text-slate-700 mb-1">Nama <span class="text-rose-500">*</span></label><input type="text" wire:model="nama" class="w-full text-sm rounded-lg border-slate-300">@error('nama')<span class="text-rose-500">{{ $message }}</span>@enderror</div>
                     </div>
                     <div class="grid grid-cols-3 gap-4">
-                        <div><label class="block font-semibold text-slate-700 mb-1">Desa</label><select wire:model="desa_id" class="w-full text-sm rounded-lg border-slate-300">@foreach($desasList as $d)<option value="{{ $d->id }}">{{ $d->nama }}</option>@endforeach</select></div>
+                        <div>
+                            <x-select 
+                                wire:model="desa_id" 
+                                label="Desa" 
+                                placeholder="-- Pilih Desa --"
+                                :options="$desasList"
+                                :searchable="true"
+                            />
+                        </div>
                         <div><label class="block font-semibold text-slate-700 mb-1">Tempat Lahir</label><input type="text" wire:model="tempat_lahir" class="w-full text-sm rounded-lg border-slate-300"></div>
                         <div><label class="block font-semibold text-slate-700 mb-1">Tanggal Lahir</label><input type="date" wire:model="tanggal_lahir" class="w-full text-sm rounded-lg border-slate-300"></div>
                     </div>
                     <div class="grid grid-cols-3 gap-4">
-                        <div><label class="block font-semibold text-slate-700 mb-1">Jenis Kelamin</label><select wire:model="jenis_kelamin" class="w-full text-sm rounded-lg border-slate-300"><option value="L">Laki-laki</option><option value="P">Perempuan</option></select></div>
+                        <div>
+                            <x-select 
+                                wire:model="jenis_kelamin" 
+                                label="Jenis Kelamin" 
+                                placeholder="-- Pilih --"
+                                :options="[
+                                    ['id' => 'L', 'nama' => 'Laki-laki'],
+                                    ['id' => 'P', 'nama' => 'Perempuan']
+                                ]"
+                                :searchable="false"
+                            />
+                        </div>
                         <div><label class="block font-semibold text-slate-700 mb-1">RT</label><input type="text" wire:model="rt" class="w-full text-sm rounded-lg border-slate-300"></div>
                         <div><label class="block font-semibold text-slate-700 mb-1">RW</label><input type="text" wire:model="rw" class="w-full text-sm rounded-lg border-slate-300"></div>
                     </div>
@@ -124,12 +143,15 @@
                 @endif
 
                 <form wire:submit="saveJabatanWarga" class="space-y-4 text-xs">
-                    <div><label class="block font-semibold text-slate-700 mb-1">Pilih Jabatan <span class="text-rose-500">*</span></label>
-                        <select wire:model="assign_jabatan_id" class="w-full text-sm rounded-lg border-slate-300">
-                            <option value="">-- Pilih Jabatan --</option>
-                            @foreach($availableJabatans as $j)<option value="{{ $j->id }}">{{ $j->nama }}</option>@endforeach
-                        </select>
-                        @error('assign_jabatan_id')<span class="text-rose-500">{{ $message }}</span>@enderror
+                    <div>
+                        <x-select 
+                            wire:model="assign_jabatan_id" 
+                            label="Pilih Jabatan" 
+                            placeholder="-- Pilih Jabatan --"
+                            :options="$availableJabatans"
+                            :searchable="true"
+                            required
+                        />
                     </div>
                     <div class="grid grid-cols-2 gap-4">
                         <div><label class="block font-semibold text-slate-700 mb-1">Tanggal Mulai <span class="text-rose-500">*</span></label><input type="date" wire:model="tanggal_mulai" class="w-full text-sm rounded-lg border-slate-300">@error('tanggal_mulai')<span class="text-rose-500">{{ $message }}</span>@enderror</div>

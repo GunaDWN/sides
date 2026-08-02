@@ -33,6 +33,7 @@ class RiwayatPengajuan extends Component
             $s = '%' . trim($this->search) . '%';
             $query->where(function ($q) use ($s) {
                 $q->where('nomor_pengajuan', 'like', $s)
+                    ->orWhere('perihal_surat', 'like', $s)
                     ->orWhereHas('jenisSurat', fn($q2) => $q2->where('nama', 'like', $s));
             });
         }

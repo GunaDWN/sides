@@ -43,48 +43,48 @@
 
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div>
-                            <label class="block text-xs font-semibold text-slate-700 mb-1">Provinsi <span class="text-rose-500">*</span></label>
-                            <select wire:model.live="provinsi" class="w-full text-sm rounded-lg border-slate-300 focus:border-emerald-500 focus:ring-emerald-500">
-                                <option value="">-- Pilih Provinsi --</option>
-                                @foreach($provinsiList as $prov)
-                                    <option value="{{ $prov }}">{{ $prov }}</option>
-                                @endforeach
-                            </select>
-                            @error('provinsi') <span class="text-xs text-rose-500">{{ $message }}</span> @enderror
+                            <x-select 
+                                wire:model.live="provinsi" 
+                                label="Provinsi" 
+                                placeholder="-- Pilih Provinsi --"
+                                :options="collect($provinsiList)->map(fn($p) => ['id' => $p, 'nama' => $p])->all()"
+                                :searchable="true"
+                                required
+                            />
                         </div>
 
                         <div>
-                            <label class="block text-xs font-semibold text-slate-700 mb-1">Kabupaten/Kota <span class="text-rose-500">*</span></label>
-                            <select wire:model.live="kabupaten" class="w-full text-sm rounded-lg border-slate-300 focus:border-emerald-500 focus:ring-emerald-500" {{ !$provinsi ? 'disabled' : '' }}>
-                                <option value="">-- Pilih Kab/Kota --</option>
-                                @foreach($kabupatenList as $kab)
-                                    <option value="{{ $kab }}">{{ $kab }}</option>
-                                @endforeach
-                            </select>
-                            @error('kabupaten') <span class="text-xs text-rose-500">{{ $message }}</span> @enderror
+                            <x-select 
+                                wire:model.live="kabupaten" 
+                                label="Kabupaten/Kota" 
+                                placeholder="-- Pilih Kab/Kota --"
+                                :options="collect($kabupatenList)->map(fn($k) => ['id' => $k, 'nama' => $k])->all()"
+                                :searchable="true"
+                                required
+                            />
                         </div>
 
                         <div>
-                            <label class="block text-xs font-semibold text-slate-700 mb-1">Kecamatan <span class="text-rose-500">*</span></label>
-                            <select wire:model.live="kecamatan" class="w-full text-sm rounded-lg border-slate-300 focus:border-emerald-500 focus:ring-emerald-500" {{ !$kabupaten ? 'disabled' : '' }}>
-                                <option value="">-- Pilih Kecamatan --</option>
-                                @foreach($kecamatanList as $kec)
-                                    <option value="{{ $kec }}">{{ $kec }}</option>
-                                @endforeach
-                            </select>
-                            @error('kecamatan') <span class="text-xs text-rose-500">{{ $message }}</span> @enderror
+                            <x-select 
+                                wire:model.live="kecamatan" 
+                                label="Kecamatan" 
+                                placeholder="-- Pilih Kecamatan --"
+                                :options="collect($kecamatanList)->map(fn($k) => ['id' => $k, 'nama' => $k])->all()"
+                                :searchable="true"
+                                required
+                            />
                         </div>
                     </div>
 
                     <div>
-                        <label class="block text-xs font-semibold text-slate-700 mb-1">Desa/Kelurahan Tujuan <span class="text-rose-500">*</span></label>
-                        <select wire:model.live="desa_id" class="w-full text-sm rounded-lg border-slate-300 focus:border-emerald-500 focus:ring-emerald-500" {{ !$kecamatan ? 'disabled' : '' }}>
-                            <option value="">-- Pilih Desa/Kelurahan --</option>
-                            @foreach($desasList as $d)
-                                <option value="{{ $d->id }}">{{ $d->nama }}</option>
-                            @endforeach
-                        </select>
-                        @error('desa_id') <span class="text-xs text-rose-500">{{ $message }}</span> @enderror
+                        <x-select 
+                            wire:model.live="desa_id" 
+                            label="Desa/Kelurahan Tujuan" 
+                            placeholder="-- Pilih Desa/Kelurahan --"
+                            :options="$desasList"
+                            :searchable="true"
+                            required
+                        />
 
                         @if($kecamatan && $desasList->isEmpty())
                             <div class="mt-2 p-3 rounded-lg bg-rose-50 border border-rose-200 text-xs text-rose-700">

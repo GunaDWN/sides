@@ -6,15 +6,19 @@
 
     <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col md:flex-row gap-4 items-center justify-between">
         <input type="text" wire:model.live.debounce.300ms="search" class="w-full md:w-72 text-sm rounded-xl border-slate-300 focus:border-emerald-500 focus:ring-emerald-500" placeholder="Cari nomor pengajuan atau jenis surat...">
-        <select wire:model.live="statusFilter" class="text-xs rounded-xl border-slate-300 focus:border-emerald-500 focus:ring-emerald-500">
-            <option value="">Semua Status</option>
-            <option value="draft">Draft</option>
-            <option value="diajukan">Diajukan</option>
-            <option value="menunggu_approval">Menunggu Approval</option>
-            <option value="perlu_perbaikan">Perlu Perbaikan</option>
-            <option value="selesai">Selesai</option>
-            <option value="ditolak">Ditolak</option>
-        </select>
+        <x-select 
+            wire:model.live="statusFilter" 
+            placeholder="Semua Status"
+            :options="[
+                ['id' => 'draft', 'nama' => 'Draft'],
+                ['id' => 'diajukan', 'nama' => 'Diajukan'],
+                ['id' => 'menunggu_approval', 'nama' => 'Menunggu Approval'],
+                ['id' => 'perlu_perbaikan', 'nama' => 'Perlu Perbaikan'],
+                ['id' => 'selesai', 'nama' => 'Selesai'],
+                ['id' => 'ditolak', 'nama' => 'Ditolak'],
+            ]"
+            :searchable="false"
+        />
     </div>
 
     <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
@@ -34,7 +38,14 @@
                     @forelse($pengajuans as $p)
                         <tr class="hover:bg-slate-50/80 transition-colors">
                             <td class="px-4 py-3 font-mono font-semibold text-slate-800">{{ $p->nomor_pengajuan }}</td>
-                            <td class="px-4 py-3 font-medium text-slate-900">{{ $p->jenisSurat->nama }}</td>
+                            <td class="px-4 py-3 font-medium text-slate-900">
+                                <div class="flex items-center gap-1.5">
+                                    @if($p->is_custom)
+                                        <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-200">Kustom</span>
+                                    @endif
+                                    <span>{{ $p->getDisplayName() }}</span>
+                                </div>
+                            </td>
                             <td class="px-4 py-3">
                                 <span class="px-2.5 py-1 rounded-full text-xs font-bold border {{ $p->status->badgeClass() }}">{{ $p->status->label() }}</span>
                             </td>

@@ -35,7 +35,14 @@
                     @forelse($approvals as $ap)
                         <tr class="hover:bg-slate-50/80 transition-colors {{ $ap->status->value === 'aktif' ? 'bg-amber-50/50' : '' }}">
                             <td class="px-4 py-3 font-mono font-semibold text-slate-800">{{ $ap->pengajuanSurat->nomor_pengajuan }}</td>
-                            <td class="px-4 py-3 text-slate-900 font-medium">{{ $ap->pengajuanSurat->jenisSurat->nama ?? '-' }}</td>
+                            <td class="px-4 py-3 text-slate-900 font-medium">
+                                <div class="flex items-center gap-1.5">
+                                    @if($ap->pengajuanSurat->is_custom)
+                                        <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-200">Kustom</span>
+                                    @endif
+                                    <span>{{ $ap->pengajuanSurat->getDisplayName() }}</span>
+                                </div>
+                            </td>
                             <td class="px-4 py-3 text-slate-700">{{ $ap->pengajuanSurat->warga->nama ?? '-' }}</td>
                             <td class="px-4 py-3"><span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-purple-50 text-purple-700 border border-purple-200">{{ $ap->nama_jabatan_snapshot }}</span></td>
                             <td class="px-4 py-3 text-xs text-slate-600">{{ $ap->urutan }}</td>

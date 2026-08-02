@@ -12,11 +12,15 @@
     <!-- Search & Filter -->
     <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col md:flex-row gap-4 items-center justify-between">
         <input type="text" wire:model.live.debounce.300ms="search" class="w-full md:w-72 text-sm rounded-xl border-slate-300 focus:border-emerald-500 focus:ring-emerald-500" placeholder="Cari nama atau email...">
-        <select wire:model.live="roleFilter" class="text-xs rounded-xl border-slate-300">
-            <option value="">Semua Role</option>
-            <option value="admin">Admin</option>
-            <option value="warga">Warga</option>
-        </select>
+        <x-select 
+            wire:model.live="roleFilter" 
+            placeholder="Semua Role"
+            :options="[
+                ['id' => 'admin', 'nama' => 'Admin'],
+                ['id' => 'warga', 'nama' => 'Warga'],
+            ]"
+            :searchable="false"
+        />
     </div>
 
     <!-- Table -->
@@ -99,31 +103,38 @@
 
                     <div class="grid grid-cols-2 gap-4">
                         <div>
-                            <label class="block font-semibold text-slate-700 mb-1">Role Utama <span class="text-rose-500">*</span></label>
-                            <select wire:model="role" class="w-full text-sm rounded-lg border-slate-300">
-                                <option value="warga">Warga</option>
-                                <option value="admin">Admin</option>
-                            </select>
+                            <x-select 
+                                wire:model="role" 
+                                label="Role Utama" 
+                                placeholder="-- Pilih Role --"
+                                :options="[
+                                    ['id' => 'warga', 'nama' => 'Warga'],
+                                    ['id' => 'admin', 'nama' => 'Admin'],
+                                ]"
+                                :searchable="false"
+                                required
+                            />
                         </div>
                         <div>
-                            <label class="block font-semibold text-slate-700 mb-1">Desa Terkait</label>
-                            <select wire:model="desa_id" class="w-full text-sm rounded-lg border-slate-300">
-                                <option value="">-- Pilih Desa --</option>
-                                @foreach($desasList as $d)
-                                    <option value="{{ $d->id }}">{{ $d->nama }}</option>
-                                @endforeach
-                            </select>
+                            <x-select 
+                                wire:model="desa_id" 
+                                label="Desa Terkait" 
+                                placeholder="-- Pilih Desa --"
+                                :options="$desasList"
+                                :searchable="true"
+                            />
                         </div>
                     </div>
 
                     <div>
-                        <label class="block font-semibold text-slate-700 mb-1">Hubungkan ke Data Warga (Opsional)</label>
-                        <select wire:model="warga_id" class="w-full text-sm rounded-lg border-slate-300">
-                            <option value="">-- Tidak Terhubung --</option>
-                            @foreach($wargasList as $w)
-                                <option value="{{ $w->id }}">{{ $w->nama }} (NIK: {{ $w->nik }})</option>
-                            @endforeach
-                        </select>
+                        <x-select 
+                            wire:model="warga_id" 
+                            label="Hubungkan ke Data Warga (Opsional)" 
+                            placeholder="-- Tidak Terhubung --"
+                            :options="$wargasList"
+                            option-label="nama"
+                            :searchable="true"
+                        />
                     </div>
 
                     <div class="flex items-center gap-2 pt-2">

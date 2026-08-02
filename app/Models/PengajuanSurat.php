@@ -19,6 +19,8 @@ class PengajuanSurat extends Model
         'desa_id',
         'jenis_surat_id',
         'warga_id',
+        'is_custom',
+        'perihal_surat',
         'status',
         'tahapan_aktif',
         'catatan_pemohon',
@@ -33,6 +35,7 @@ class PengajuanSurat extends Model
     {
         return [
             'status' => StatusPengajuan::class,
+            'is_custom' => 'boolean',
             'tahapan_aktif' => 'integer',
             'submitted_at' => 'datetime',
             'completed_at' => 'datetime',
@@ -85,5 +88,17 @@ class PengajuanSurat extends Model
     public function logs(): HasMany
     {
         return $this->hasMany(PengajuanLog::class)->orderBy('id', 'desc');
+    }
+
+    /**
+     * Get display name: perihal_surat for custom, jenisSurat->nama for template
+     */
+    public function getDisplayName(): string
+    {
+        if ($this->is_custom) {
+            return $this->perihal_surat ?? 'Surat Kustom';
+        }
+
+        return $this->jenisSurat?->nama ?? 'Surat';
     }
 }

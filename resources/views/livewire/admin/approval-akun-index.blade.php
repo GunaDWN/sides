@@ -13,20 +13,24 @@
         </div>
         <div class="flex flex-wrap gap-3 w-full md:w-auto">
             @if($user->isAdmin())
-                <select wire:model.live="desaFilter" class="text-xs rounded-xl border-slate-300 focus:border-emerald-500 focus:ring-emerald-500">
-                    <option value="">Semua Desa</option>
-                    @foreach($desasList as $d)
-                        <option value="{{ $d->id }}">{{ $d->nama }}</option>
-                    @endforeach
-                </select>
+                <x-select 
+                    wire:model.live="desaFilter" 
+                    placeholder="Semua Desa"
+                    :options="$desasList"
+                    :searchable="true"
+                />
             @endif
 
-            <select wire:model.live="statusFilter" class="text-xs rounded-xl border-slate-300 focus:border-emerald-500 focus:ring-emerald-500">
-                <option value="">Semua Status</option>
-                <option value="menunggu_approval">Menunggu Approval</option>
-                <option value="disetujui">Disetujui</option>
-                <option value="ditolak">Ditolak</option>
-            </select>
+            <x-select 
+                wire:model.live="statusFilter" 
+                placeholder="Semua Status"
+                :options="[
+                    ['id' => 'menunggu_approval', 'nama' => 'Menunggu Approval'],
+                    ['id' => 'disetujui', 'nama' => 'Disetujui'],
+                    ['id' => 'ditolak', 'nama' => 'Ditolak'],
+                ]"
+                :searchable="false"
+            />
         </div>
     </div>
 

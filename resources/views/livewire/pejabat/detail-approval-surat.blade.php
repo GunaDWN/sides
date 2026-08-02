@@ -21,7 +21,15 @@
             <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 space-y-4">
                 <h3 class="text-sm font-bold text-slate-900 uppercase tracking-wider border-b border-slate-100 pb-2">Detail Pengajuan</h3>
                 <div class="grid grid-cols-2 gap-4 text-sm">
-                    <div><span class="text-xs text-slate-400 block">Jenis Surat</span><span class="font-bold text-slate-900">{{ $approval->pengajuanSurat->jenisSurat->nama }}</span></div>
+                    <div>
+                        <span class="text-xs text-slate-400 block">Jenis / Perihal Surat</span>
+                        <div class="flex items-center gap-1.5 mt-0.5">
+                            @if($approval->pengajuanSurat->is_custom)
+                                <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-200">Kustom</span>
+                            @endif
+                            <span class="font-bold text-slate-900">{{ $approval->pengajuanSurat->getDisplayName() }}</span>
+                        </div>
+                    </div>
                     <div><span class="text-xs text-slate-400 block">Pemohon</span><span class="font-bold text-slate-900">{{ $approval->pengajuanSurat->warga->nama }}</span></div>
                     <div><span class="text-xs text-slate-400 block">NIK Pemohon</span><span class="font-mono text-slate-700">{{ $approval->pengajuanSurat->warga->nik }}</span></div>
                     <div><span class="text-xs text-slate-400 block">Desa</span><span class="text-slate-700">{{ $approval->pengajuanSurat->desa->nama }}</span></div>
