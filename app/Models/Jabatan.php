@@ -38,6 +38,22 @@ class Jabatan extends Model
     public function permissions(): BelongsToMany
     {
         return $this->belongsToMany(Permission::class, 'jabatan_permissions')
+            ->withPivot('desa_id')
+            ->withTimestamps();
+    }
+
+    public function permissionsForDesa(?int $desaId = null)
+    {
+        return $this->belongsToMany(Permission::class, 'jabatan_permissions')
+            ->where(function ($q) use ($desaId) {
+                if ($desaId) {
+                    $q->where('jabatan_permissions.desa_id', $desaId)
+                      ->orWhereNull('jabatan_permissions.desa_id');
+                } else {
+                    $q->whereNull('jabatan_permissions.desa_id');
+                }
+            })
+            ->withPivot('desa_id')
             ->withTimestamps();
     }
 

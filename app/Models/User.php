@@ -101,10 +101,26 @@ class User extends Authenticatable
             return false;
         }
 
+        $userDesaId = $this->desa_id ?? $this->warga?->desa_id;
+
         $activeWargaJabatans = $this->getActiveJabatans();
         foreach ($activeWargaJabatans as $wj) {
             if ($wj->jabatan && $wj->jabatan->is_active) {
-                if ($wj->jabatan->permissions->contains('name', $permissionName)) {
+                $hasPerm = \Illuminate\Support\Facades\DB::table('jabatan_permissions')
+                    ->join('permissions', 'permissions.id', '=', 'jabatan_permissions.permission_id')
+                    ->where('jabatan_permissions.jabatan_id', $wj->jabatan_id)
+                    ->where('permissions.name', $permissionName)
+                    ->where(function($q) use ($userDesaId) {
+                        if ($userDesaId) {
+                            $q->where('jabatan_permissions.desa_id', $userDesaId)
+                              ->orWhereNull('jabatan_permissions.desa_id');
+                        } else {
+                            $q->whereNull('jabatan_permissions.desa_id');
+                        }
+                    })
+                    ->exists();
+
+                if ($hasPerm) {
                     return true;
                 }
             }

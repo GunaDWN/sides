@@ -45,6 +45,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/desa', Admin\DesaIndex::class)->name('admin.desa');
         Route::get('/user', Admin\UserIndex::class)->name('admin.user');
         Route::get('/jabatan', Admin\JabatanIndex::class)->name('admin.jabatan');
+        Route::get('/hak-akses', Admin\HakAksesIndex::class)->name('admin.hak-akses');
         Route::get('/warga', Admin\WargaIndex::class)->name('admin.warga');
         Route::get('/jenis-surat', Admin\JenisSuratIndex::class)->name('admin.jenis-surat');
         Route::get('/log-aktivitas', Admin\LogAktivitas::class)->name('admin.log-aktivitas');

@@ -7,6 +7,21 @@
     --font-sans: 'Plus Jakarta Sans', 'Outfit', ui-sans-serif, system-ui, sans-serif;
 }
 
+/* Global Button & Clickable Cursor Reset */
+button,
+[type="button"],
+[type="submit"],
+[type="reset"],
+[role="button"] {
+    cursor: pointer;
+}
+
+button:disabled,
+[type="button"]:disabled,
+[type="submit"]:disabled {
+    cursor: not-allowed;
+}
+
 /* Shadcn-ui Inspired Form Input Global Styles */
 input[type="text"],
 input[type="email"],
