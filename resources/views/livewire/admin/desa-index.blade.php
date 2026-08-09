@@ -9,6 +9,13 @@
         </button>
     </div>
 
+    @if(session('success'))
+        <x-alert type="success" :message="session('success')" />
+    @endif
+    @if(session('error'))
+        <x-alert type="error" :message="session('error')" />
+    @endif
+
     <!-- Search -->
     <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
         <input type="text" wire:model.live.debounce.300ms="search" class="w-full md:w-72 text-sm rounded-xl border-slate-300 focus:border-emerald-500 focus:ring-emerald-500" placeholder="Cari nama desa, kecamatan...">
@@ -22,7 +29,6 @@
                     <tr>
                         <th class="px-4 py-3">Nama Desa</th>
                         <th class="px-4 py-3">Kecamatan & Kab/Kota</th>
-                        <th class="px-4 py-3">Kepala Desa</th>
                         <th class="px-4 py-3">Status Registrasi</th>
                         <th class="px-4 py-3 text-right">Aksi</th>
                     </tr>
@@ -32,7 +38,6 @@
                         <tr class="hover:bg-slate-50/80 transition-colors">
                             <td class="px-4 py-3 font-bold text-slate-900">{{ $d->nama }}</td>
                             <td class="px-4 py-3 text-slate-600">{{ $d->kecamatan }}, {{ $d->kabupaten }} ({{ $d->provinsi }})</td>
-                            <td class="px-4 py-3 text-slate-700">{{ $d->nama_kepala_desa ?? '-' }}</td>
                             <td class="px-4 py-3">
                                 <button wire:click="toggleActive({{ $d->id }})" class="px-2.5 py-1 rounded-full text-xs font-bold border transition-all {{ $d->is_active ? 'bg-emerald-100 text-emerald-800 border-emerald-200' : 'bg-rose-100 text-rose-800 border-rose-200' }}">
                                     {{ $d->is_active ? 'Aktif' : 'Nonaktif' }}
@@ -46,7 +51,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="5" class="px-4 py-8 text-center text-slate-400 text-xs">Belum ada data desa.</td>
+                            <td colspan="4" class="px-4 py-8 text-center text-slate-400 text-xs">Belum ada data desa.</td>
                         </tr>
                     @endforelse
                 </tbody>
@@ -78,27 +83,43 @@
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-3 gap-4">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div>
                             <label class="block font-semibold text-slate-700 mb-1">Provinsi <span class="text-rose-500">*</span></label>
-                            <input type="text" wire:model="provinsi" class="w-full text-sm rounded-lg border-slate-300">
-                            @error('provinsi') <span class="text-rose-500">{{ $message }}</span> @enderror
+                            <x-select 
+                                wire:model.live="selectedProvinsiId" 
+                                placeholder="-- Pilih Provinsi --"
+                                :options="$provincesList"
+                                optionValue="id"
+                                optionLabel="nama"
+                                :searchable="true"
+                            />
+                            @error('provinsi') <span class="text-rose-500 text-[11px] block mt-0.5">{{ $message }}</span> @enderror
                         </div>
                         <div>
                             <label class="block font-semibold text-slate-700 mb-1">Kabupaten/Kota <span class="text-rose-500">*</span></label>
-                            <input type="text" wire:model="kabupaten" class="w-full text-sm rounded-lg border-slate-300">
-                            @error('kabupaten') <span class="text-rose-500">{{ $message }}</span> @enderror
+                            <x-select 
+                                wire:model.live="selectedKabupatenId" 
+                                placeholder="{{ $selectedProvinsiId ? '-- Pilih Kab/Kota --' : '-- Pilih Provinsi Dulu --' }}"
+                                :options="$kabupatensList"
+                                optionValue="id"
+                                optionLabel="nama"
+                                :searchable="true"
+                            />
+                            @error('kabupaten') <span class="text-rose-500 text-[11px] block mt-0.5">{{ $message }}</span> @enderror
                         </div>
                         <div>
                             <label class="block font-semibold text-slate-700 mb-1">Kecamatan <span class="text-rose-500">*</span></label>
-                            <input type="text" wire:model="kecamatan" class="w-full text-sm rounded-lg border-slate-300">
-                            @error('kecamatan') <span class="text-rose-500">{{ $message }}</span> @enderror
+                            <x-select 
+                                wire:model.live="selectedKecamatanId" 
+                                placeholder="{{ $selectedKabupatenId ? '-- Pilih Kecamatan --' : '-- Pilih Kab/Kota Dulu --' }}"
+                                :options="$kecamatansList"
+                                optionValue="id"
+                                optionLabel="nama"
+                                :searchable="true"
+                            />
+                            @error('kecamatan') <span class="text-rose-500 text-[11px] block mt-0.5">{{ $message }}</span> @enderror
                         </div>
-                    </div>
-
-                    <div>
-                        <label class="block font-semibold text-slate-700 mb-1">Nama Kepala Desa</label>
-                        <input type="text" wire:model="nama_kepala_desa" class="w-full text-sm rounded-lg border-slate-300">
                     </div>
 
                     <div>

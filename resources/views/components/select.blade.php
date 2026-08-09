@@ -18,16 +18,28 @@
             $lbl = is_object($opt) ? ($opt->{$optionLabel} ?? $opt) : (is_array($opt) ? ($opt[$optionLabel] ?? $opt) : $opt);
             
             $formattedOptions[] = [
-                'value' => $val,
-                'label' => $lbl,
+                'value' => (string) $val,
+                'label' => (string) $lbl,
             ];
         }
     }
+    $optionsJson = json_encode($formattedOptions, JSON_HEX_APOS | JSON_HEX_QUOT);
 @endphp
 
 <div x-data="{ 
     open: false, 
     search: '',
+    options: {{ $optionsJson }},
+    getLabel(val) {
+        if (!val) return '';
+        const found = this.options.find(o => o.value == val);
+        return found ? found.label : val;
+    },
+    filteredOptions() {
+        if (!this.search) return this.options;
+        const q = this.search.toLowerCase();
+        return this.options.filter(o => o.label.toLowerCase().includes(q));
+    },
     toggleOpen() {
         this.open = !this.open;
         if (this.open) {
@@ -38,7 +50,7 @@
             });
         }
     }
-}" class="relative w-full">
+}" class="relative w-full" wire:key="{{ $wireModel }}-select-{{ md5($optionsJson) }}">
 
     @if($label)
         <label class="block text-xs font-semibold text-slate-700 mb-1">
@@ -50,18 +62,10 @@
     <button type="button" @click="toggleOpen()" @click.outside="open = false" 
         {{ $attributes->merge(['class' => 'w-full flex items-center justify-between text-left text-sm rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 shadow-2xs hover:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all']) }}>
         
-        <span class="truncate" :class="{ 'text-slate-900 font-semibold': {{ $wireModel ? '$wire.get("' . $wireModel . '")' : '$el.dataset.hasValue' }}, 'text-slate-400': !({{ $wireModel ? '$wire.get("' . $wireModel . '")' : '$el.dataset.hasValue' }}) }">
+        <span class="truncate" :class="{ 'text-slate-900 font-semibold': {{ $wireModel ? '$wire.get(\'' . $wireModel . '\')' : 'false' }}, 'text-slate-400': !{{ $wireModel ? '$wire.get(\'' . $wireModel . '\')' : 'true' }} }">
             @if($wireModel)
                 <template x-if="$wire.get('{{ $wireModel }}')">
-                    <span x-text="
-                        (() => {
-                            const val = $wire.get('{{ $wireModel }}');
-                            @foreach($formattedOptions as $item)
-                                if (val == '{{ $item['value'] }}') return '{{ addslashes($item['label']) }}';
-                            @endforeach
-                            return val;
-                        })()
-                    "></span>
+                    <span x-text="getLabel($wire.get('{{ $wireModel }}'))"></span>
                 </template>
                 <template x-if="!$wire.get('{{ $wireModel }}')">
                     <span>{{ $placeholder }}</span>
@@ -103,18 +107,16 @@
                 {{ $placeholder }}
             </div>
 
-            @foreach($formattedOptions as $item)
-                <div @click="@if($wireModel) $wire.set('{{ $wireModel }}', '{{ $item['value'] }}'); @endif open = false; search = ''" 
-                    x-show="!search || '{{ strtolower(addslashes($item['label'])) }}'.includes(search.toLowerCase())"
-                    class="px-3.5 py-2.5 hover:bg-emerald-50 hover:text-emerald-900 cursor-pointer flex items-center justify-between transition-colors @if($wireModel) :class="{ 'bg-emerald-50/70 text-emerald-800 font-bold': $wire.get('{{ $wireModel }}') == '{{ $item['value'] }}', 'text-slate-700': $wire.get('{{ $wireModel }}') != '{{ $item['value'] }}' }" @endif">
-                    <span>{{ $item['label'] }}</span>
-                    @if($wireModel)
-                        <template x-if="$wire.get('{{ $wireModel }}') == '{{ $item['value'] }}'">
-                            <svg class="w-4 h-4 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" /></svg>
-                        </template>
-                    @endif
+            <template x-for="item in filteredOptions()" :key="item.value">
+                <div @click="@if($wireModel) $wire.set('{{ $wireModel }}', item.value); @endif open = false; search = ''" 
+                    class="px-3.5 py-2.5 hover:bg-emerald-50 hover:text-emerald-900 cursor-pointer flex items-center justify-between transition-colors"
+                    :class="{ 'bg-emerald-50/70 text-emerald-800 font-bold': {{ $wireModel ? '$wire.get(\'' . $wireModel . '\')' : 'false' }} == item.value, 'text-slate-700': {{ $wireModel ? '$wire.get(\'' . $wireModel . '\')' : 'false' }} != item.value }">
+                    <span x-text="item.label"></span>
+                    <template x-if="{{ $wireModel ? '$wire.get(\'' . $wireModel . '\')' : 'false' }} == item.value">
+                        <svg class="w-4 h-4 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" /></svg>
+                    </template>
                 </div>
-            @endforeach
+            </template>
         </div>
     </div>
 

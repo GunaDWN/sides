@@ -9,10 +9,10 @@
     </div>
 
     @if(session('success'))
-        <div class="p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-sm font-semibold">{{ session('success') }}</div>
+        <x-alert type="success" :message="session('success')" />
     @endif
     @if(session('error'))
-        <div class="p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-sm font-semibold">{{ session('error') }}</div>
+        <x-alert type="error" :message="session('error')" />
     @endif
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">

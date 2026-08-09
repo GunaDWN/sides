@@ -17,6 +17,13 @@
         </div>
     </div>
 
+    @if(session('success'))
+        <x-alert type="success" :message="session('success')" />
+    @endif
+    @if(session('error'))
+        <x-alert type="error" :message="session('error')" />
+    @endif
+
     <!-- Search -->
     <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
         <input type="text" wire:model.live.debounce.300ms="search" class="w-full md:w-80 text-sm rounded-xl border-slate-300 focus:border-emerald-500 focus:ring-emerald-500" placeholder="Cari nama atau kode jabatan...">

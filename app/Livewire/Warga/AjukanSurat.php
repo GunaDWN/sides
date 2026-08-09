@@ -162,9 +162,12 @@ class AjukanSurat extends Component
             ? $jenisSurats->firstWhere('id', $this->jenis_surat_id)
             : null;
 
-        // Query Jabatan aktif di desa user untuk dropdown persetujuan kustom
-        $availableJabatans = Jabatan::where('desa_id', $user->desa_id)
-            ->where('is_active', true)
+        // Query Jabatan aktif di desa user + jabatan global untuk dropdown persetujuan kustom
+        $availableJabatans = Jabatan::where('is_active', true)
+            ->where(function ($q) use ($user) {
+                $q->where('desa_id', $user->desa_id)
+                  ->orWhereNull('desa_id');
+            })
             ->orderBy('urutan', 'asc')
             ->get();
 

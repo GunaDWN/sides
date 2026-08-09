@@ -8,6 +8,13 @@
         <span class="px-3 py-1 rounded-full text-xs font-bold border {{ $pengajuan->status->badgeClass() }}">{{ $pengajuan->status->label() }}</span>
     </div>
 
+    @if(session('success'))
+        <x-alert type="success" :message="session('success')" />
+    @endif
+    @if(session('error'))
+        <x-alert type="error" :message="session('error')" />
+    @endif
+
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {{-- Main Info --}}
         <div class="lg:col-span-2 space-y-6">

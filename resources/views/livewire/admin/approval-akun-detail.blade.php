@@ -13,6 +13,13 @@
         </span>
     </div>
 
+    @if(session('success'))
+        <x-alert type="success" :message="session('success')" />
+    @endif
+    @if(session('error'))
+        <x-alert type="error" :message="session('error')" />
+    @endif
+
     <!-- Main Info Grid -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <!-- Left: Identitas Warga -->
@@ -81,7 +88,7 @@
                     </div>
 
                     <div class="flex flex-col gap-2 pt-2">
-                        <button wire:click="approve" wire:confirm="Apakah Anda yakin ingin menyetujui akun ini? Data Warga & User akan otomatis dibuat." class="w-full py-2.5 rounded-xl font-bold text-white bg-emerald-600 hover:bg-emerald-700 shadow-md shadow-emerald-600/20 transition-all text-sm">
+                        <button wire:click="$set('showApproveModal', true)" class="w-full py-2.5 rounded-xl font-bold text-white bg-emerald-600 hover:bg-emerald-700 shadow-md shadow-emerald-600/20 transition-all text-sm">
                             Setujui Pendaftaran
                         </button>
                         <button wire:click="$set('showRejectModal', true)" class="w-full py-2.5 rounded-xl font-bold text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 transition-all text-sm">
@@ -119,24 +126,33 @@
         </div>
     </div>
 
+    <!-- Approve Modal -->
+    <x-confirm-modal 
+        :show="$showApproveModal"
+        title="Setujui Pendaftaran Akun"
+        description="Apakah Anda yakin ingin menyetujui registrasi akun ini? Data Warga dan Akun Pengguna akan otomatis diaktifkan di sistem."
+        confirmText="Ya, Setujui Akun"
+        cancelText="Batal"
+        confirmAction="approve"
+        cancelAction="$set('showApproveModal', false)"
+        variant="emerald"
+    />
+
     <!-- Reject Modal -->
-    @if($showRejectModal)
-        <div class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <div class="bg-white rounded-2xl border border-slate-200 shadow-2xl max-w-md w-full p-6 space-y-4">
-                <h3 class="text-lg font-bold text-slate-900">Tolak Pendaftaran Akun</h3>
-                <p class="text-xs text-slate-500">Berikan alasan penolakan yang jelas (alasan ini wajib dan akan ditampilkan kepada pemohon).</p>
-
-                <div>
-                    <label class="block text-xs font-semibold text-slate-700 mb-1">Alasan Penolakan <span class="text-rose-500">*</span></label>
-                    <textarea wire:model="alasanPenolakan" rows="3" class="w-full text-sm rounded-xl border-slate-300 focus:border-rose-500 focus:ring-rose-500" placeholder="Contoh: KTP tidak terbaca / NIK tidak sesuai data kependudukan..."></textarea>
-                    @error('alasanPenolakan') <span class="text-xs text-rose-500">{{ $message }}</span> @enderror
-                </div>
-
-                <div class="flex justify-end gap-3 pt-2">
-                    <button wire:click="$set('showRejectModal', false)" class="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100">Batal</button>
-                    <button wire:click="reject" class="px-4 py-2 rounded-xl text-xs font-bold text-white bg-rose-600 hover:bg-rose-700 shadow-md shadow-rose-600/20">Konfirmasi Tolak</button>
-                </div>
-            </div>
+    <x-confirm-modal 
+        :show="$showRejectModal"
+        title="Tolak Pendaftaran Akun"
+        description="Berikan alasan penolakan yang jelas (alasan ini wajib dan akan ditampilkan kepada pemohon)."
+        confirmText="Konfirmasi Tolak"
+        cancelText="Batal"
+        confirmAction="reject"
+        cancelAction="$set('showRejectModal', false)"
+        variant="rose"
+    >
+        <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Alasan Penolakan <span class="text-rose-500">*</span></label>
+            <textarea wire:model="alasanPenolakan" rows="3" class="w-full text-sm rounded-xl border-slate-300 focus:border-rose-500 focus:ring-rose-500" placeholder="Contoh: KTP tidak terbaca / NIK tidak sesuai data kependudukan..."></textarea>
+            @error('alasanPenolakan') <span class="text-xs text-rose-500 mt-1 block">{{ $message }}</span> @enderror
         </div>
-    @endif
+    </x-confirm-modal>
 </div>

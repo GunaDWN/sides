@@ -23,6 +23,31 @@
         $isAdmin = $user?->isAdmin();
         $hasAccountApprovePerm = $user?->hasPermissionTo('registrasi-akun.view') || $user?->hasPermissionTo('registrasi-akun.approve');
         $hasLetterApprovePerm = $user?->hasPermissionTo('pengajuan-surat.approve') || ($user?->getActiveJabatans()->count() > 0);
+
+        // Pending count for Approval Akun
+        $pendingAccountCount = 0;
+        if ($isAdmin || $hasAccountApprovePerm) {
+            $queryAccount = \App\Models\RegistrasiAkun::where('status', \App\Enums\StatusRegistrasi::MENUNGGU_APPROVAL);
+            if (!$isAdmin && $user?->desa_id) {
+                $queryAccount->where('desa_id', $user->desa_id);
+            }
+            $pendingAccountCount = $queryAccount->count();
+        }
+
+        // Pending count for Inbox Approval Surat
+        $pendingLetterCount = 0;
+        if ($hasLetterApprovePerm) {
+            if ($isAdmin) {
+                $pendingLetterCount = \App\Models\PengajuanApproval::where('status', \App\Enums\StatusApproval::AKTIF)->count();
+            } else {
+                $jabatanIds = $user?->warga?->activeWargaJabatan->pluck('jabatan_id') ?? collect();
+                if ($jabatanIds->isNotEmpty()) {
+                    $pendingLetterCount = \App\Models\PengajuanApproval::whereIn('jabatan_id', $jabatanIds)
+                        ->where('status', \App\Enums\StatusApproval::AKTIF)
+                        ->count();
+                }
+            }
+        }
     @endphp
 
     <!-- Mobile Overlay Backdrop -->
@@ -138,12 +163,20 @@
                     <div class="space-y-1">
                         <div x-show="!sidebarCollapsed" class="px-3 pb-1 text-[10px] font-bold uppercase tracking-wider text-slate-400">Tugas Pejabat</div>
                         <a href="{{ route('pejabat.inbox-approval') }}" wire:navigate 
-                            :title="sidebarCollapsed ? 'Inbox Approval Surat' : ''"
-                            class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-medium text-xs transition-all {{ request()->routeIs('pejabat.inbox-approval*') ? 'bg-emerald-50 text-emerald-700 font-bold border border-emerald-200/80 shadow-xs' : 'text-slate-600 hover:text-emerald-700 hover:bg-emerald-50/60' }}" :class="sidebarCollapsed ? 'justify-center px-0' : ''">
-                            <svg class="w-4 h-4 flex-shrink-0 opacity-80" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                            </svg>
-                            <span x-show="!sidebarCollapsed" class="truncate">Inbox Approval Surat</span>
+                            :title="sidebarCollapsed ? 'Inbox Approval Surat{{ $pendingLetterCount > 0 ? " ($pendingLetterCount)" : "" }}' : ''"
+                            class="relative flex items-center justify-between px-3.5 py-2.5 rounded-xl font-medium text-xs transition-all {{ request()->routeIs('pejabat.inbox-approval*') ? 'bg-emerald-50 text-emerald-700 font-bold border border-emerald-200/80 shadow-xs' : 'text-slate-600 hover:text-emerald-700 hover:bg-emerald-50/60' }}">
+                            <div class="flex items-center gap-3 min-w-0" :class="sidebarCollapsed ? 'justify-center w-full' : ''">
+                                <svg class="w-4 h-4 flex-shrink-0 opacity-80" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                                </svg>
+                                <span x-show="!sidebarCollapsed" class="truncate">Inbox Approval Surat</span>
+                            </div>
+                            @if($pendingLetterCount > 0)
+                                <span x-show="!sidebarCollapsed" class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-rose-500 text-white shadow-xs animate-pulse flex-shrink-0">
+                                    {{ $pendingLetterCount > 99 ? '99+' : $pendingLetterCount }}
+                                </span>
+                                <span x-show="sidebarCollapsed" class="w-2.5 h-2.5 rounded-full bg-rose-500 absolute top-2 right-2 ring-2 ring-white animate-pulse"></span>
+                            @endif
                         </a>
                     </div>
                 @endif
@@ -154,12 +187,20 @@
                         <div x-show="!sidebarCollapsed" class="px-3 pb-1 text-[10px] font-bold uppercase tracking-wider text-slate-400">Administrator</div>
                         @if($hasAccountApprovePerm || $isAdmin)
                             <a href="{{ route('admin.approval-akun') }}" wire:navigate 
-                                :title="sidebarCollapsed ? 'Approval Akun' : ''"
-                                class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-medium text-xs transition-all {{ request()->routeIs('admin.approval-akun*') ? 'bg-emerald-50 text-emerald-700 font-bold border border-emerald-200/80 shadow-xs' : 'text-slate-600 hover:text-emerald-700 hover:bg-emerald-50/60' }}" :class="sidebarCollapsed ? 'justify-center px-0' : ''">
-                                <svg class="w-4 h-4 flex-shrink-0 opacity-80" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
-                                </svg>
-                                <span x-show="!sidebarCollapsed" class="truncate">Approval Akun</span>
+                                :title="sidebarCollapsed ? 'Approval Akun{{ $pendingAccountCount > 0 ? " ($pendingAccountCount)" : "" }}' : ''"
+                                class="relative flex items-center justify-between px-3.5 py-2.5 rounded-xl font-medium text-xs transition-all {{ request()->routeIs('admin.approval-akun*') ? 'bg-emerald-50 text-emerald-700 font-bold border border-emerald-200/80 shadow-xs' : 'text-slate-600 hover:text-emerald-700 hover:bg-emerald-50/60' }}">
+                                <div class="flex items-center gap-3 min-w-0" :class="sidebarCollapsed ? 'justify-center w-full' : ''">
+                                    <svg class="w-4 h-4 flex-shrink-0 opacity-80" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+                                    </svg>
+                                    <span x-show="!sidebarCollapsed" class="truncate">Approval Akun</span>
+                                </div>
+                                @if($pendingAccountCount > 0)
+                                    <span x-show="!sidebarCollapsed" class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-rose-500 text-white shadow-xs animate-pulse flex-shrink-0">
+                                        {{ $pendingAccountCount > 99 ? '99+' : $pendingAccountCount }}
+                                    </span>
+                                    <span x-show="sidebarCollapsed" class="w-2.5 h-2.5 rounded-full bg-rose-500 absolute top-2 right-2 ring-2 ring-white animate-pulse"></span>
+                                @endif
                             </a>
                         @endif
 
@@ -290,23 +331,13 @@
 
         <!-- Page Content Container -->
         <main class="flex-1 overflow-y-auto p-6 lg:p-8">
-            <!-- Flash Message Alerts -->
+            <!-- Flash Message Toast Notifications -->
             @if(session('success'))
-                <div class="mb-6 p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-900 flex items-center justify-between shadow-xs">
-                    <div class="flex items-center gap-3">
-                        <div class="w-8 h-8 rounded-full bg-emerald-600 text-white flex items-center justify-center flex-shrink-0 font-bold">✓</div>
-                        <span class="text-xs font-bold">{{ session('success') }}</span>
-                    </div>
-                </div>
+                <x-toast type="success" :message="session('success')" />
             @endif
 
             @if(session('error'))
-                <div class="mb-6 p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-900 flex items-center justify-between shadow-xs">
-                    <div class="flex items-center gap-3">
-                        <div class="w-8 h-8 rounded-full bg-rose-600 text-white flex items-center justify-center flex-shrink-0 font-bold">✕</div>
-                        <span class="text-xs font-bold">{{ session('error') }}</span>
-                    </div>
-                </div>
+                <x-toast type="error" :message="session('error')" />
             @endif
 
             {{ $slot }}

@@ -7,7 +7,7 @@
         </div>
 
         @if(session('status'))
-            <div class="p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-sm font-semibold text-center">{{ session('status') }}</div>
+            <x-alert type="success" :message="session('status')" />
         @endif
 
         <form wire:submit="login" class="bg-white rounded-2xl border border-slate-200 shadow-xl p-8 space-y-5">

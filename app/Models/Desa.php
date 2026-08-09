@@ -28,7 +28,6 @@ class Desa extends Model
         'logo_path',
         'kop_path',
         'stempel_path',
-        'nama_kepala_desa',
         'is_active',
     ];
 

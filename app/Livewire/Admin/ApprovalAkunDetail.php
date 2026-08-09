@@ -13,6 +13,7 @@ class ApprovalAkunDetail extends Component
     public $catatan = '';
     public $alasanPenolakan = '';
     public $showRejectModal = false;
+    public $showApproveModal = false;
 
     public function mount(RegistrasiAkun $registrasi)
     {
@@ -41,6 +42,7 @@ class ApprovalAkunDetail extends Component
                 request()->userAgent()
             );
 
+            $this->showApproveModal = false;
             session()->flash('success', 'Pengajuan registrasi akun berhasil disetujui! Akun pengguna dan data warga telah diaktifkan.');
             $this->registrasi->refresh();
         } catch (\Throwable $e) {

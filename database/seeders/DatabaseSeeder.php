@@ -65,7 +65,6 @@ class DatabaseSeeder extends Seeder
                 'kode_pos' => '17530',
                 'telepon' => '021-891001',
                 'email' => 'kantor@sukamaju.desa.id',
-                'nama_kepala_desa' => 'H. Ahmad Subarkah, S.Sos.',
                 'is_active' => true,
             ]
         );

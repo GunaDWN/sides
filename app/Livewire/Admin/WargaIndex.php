@@ -172,7 +172,13 @@ class WargaIndex extends Component
         $desasList = Desa::where('is_active', true)->get();
 
         $availableJabatans = $this->selectedWargaForJabatan
-            ? Jabatan::where('desa_id', $this->selectedWargaForJabatan->desa_id)->where('is_active', true)->get()
+            ? Jabatan::where('is_active', true)
+                ->where(function ($q) {
+                    $q->where('desa_id', $this->selectedWargaForJabatan->desa_id)
+                      ->orWhereNull('desa_id');
+                })
+                ->orderBy('urutan')
+                ->get()
             : collect();
 
         return view('livewire.admin.warga-index', [
