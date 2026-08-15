@@ -1,11 +1,11 @@
-<div class="max-w-4xl mx-auto space-y-6">
-    <div class="flex items-center justify-between">
+<div class="space-y-6">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-4">
         <div>
             <a href="{{ route('pejabat.inbox-approval') }}" wire:navigate class="text-xs font-semibold text-emerald-600 hover:underline inline-flex items-center gap-1 mb-1">&larr; Kembali ke Inbox</a>
             <h1 class="text-2xl font-bold text-slate-900">Proses Persetujuan Surat</h1>
             <p class="text-xs text-slate-500 font-mono">{{ $approval->pengajuanSurat->nomor_pengajuan }}</p>
         </div>
-        <span class="px-3 py-1 rounded-full text-xs font-bold border {{ $approval->status->badgeClass() }}">{{ $approval->status->label() }}</span>
+        <span class="px-3 py-1 rounded-full text-xs font-bold border {{ $approval->status->badgeClass() }} self-start sm:self-auto">{{ $approval->status->label() }}</span>
     </div>
 
     @if(session('success'))
@@ -40,18 +40,100 @@
 
             {{-- Latest Document --}}
             @if($approval->pengajuanSurat->latestDokumen)
+                @php $latestDoc = $approval->pengajuanSurat->latestDokumen; @endphp
                 <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 space-y-3">
-                    <h3 class="text-sm font-bold text-slate-900 uppercase tracking-wider border-b border-slate-100 pb-2">Dokumen Terbaru (Versi {{ $approval->pengajuanSurat->latestDokumen->versi }})</h3>
-                    <div class="flex items-center justify-between p-4 rounded-xl bg-slate-50 border border-slate-200">
+                    <div class="flex items-center justify-between border-b border-slate-100 pb-2">
+                        <h3 class="text-sm font-bold text-slate-900 uppercase tracking-wider">Dokumen Terbaru (Versi {{ $latestDoc->versi }})</h3>
+                        @if($latestDoc->signed_file_path)
+                            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200 flex items-center gap-1">
+                                <svg class="w-3 h-3 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" /></svg>
+                                Tertandatangani Digital (PDF)
+                            </span>
+                        @endif
+                    </div>
+                    <div class="flex items-center justify-between p-4 rounded-xl {{ $latestDoc->signed_file_path ? 'bg-emerald-50/50 border border-emerald-200' : 'bg-slate-50 border border-slate-200' }}">
                         <div class="text-sm">
-                            <p class="font-semibold text-slate-900">{{ $approval->pengajuanSurat->latestDokumen->nama_file_asli }}</p>
-                            <p class="text-[10px] text-slate-400">{{ number_format($approval->pengajuanSurat->latestDokumen->file_size / 1024, 1) }} KB | {{ strtoupper($approval->pengajuanSurat->latestDokumen->file_extension) }}</p>
+                            <div class="flex items-center gap-2">
+                                <span class="px-2 py-0.5 rounded text-[10px] font-black uppercase {{ $latestDoc->signed_file_path ? 'bg-rose-100 text-rose-700' : 'bg-blue-100 text-blue-700' }}">
+                                    {{ $latestDoc->signed_file_path ? 'PDF' : strtoupper($latestDoc->file_extension) }}
+                                </span>
+                                <p class="font-bold text-slate-900">{{ $latestDoc->nama_file_asli }}</p>
+                            </div>
+                            <p class="text-[10px] text-slate-500 mt-1">
+                                {{ $latestDoc->signed_file_path ? 'Dokumen PDF dengan Tanda Tangan & Stempel Resmi' : number_format($latestDoc->file_size / 1024, 1) . ' KB' }}
+                            </p>
                         </div>
-                        <a href="{{ route('download.dokumen', $approval->pengajuanSurat->latestDokumen->id) }}" target="_blank" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs shadow-md flex items-center gap-2">
+                        <a href="{{ route('download.dokumen', $latestDoc->id) }}" target="_blank" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs shadow-md shadow-emerald-600/20 flex items-center gap-2 transition-all">
                             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
-                            Unduh Dokumen
+                            {{ $latestDoc->signed_file_path ? 'Unduh Surat Tertandatangani' : 'Unduh Dokumen' }}
                         </a>
                     </div>
+                </div>
+            @endif
+
+            {{-- Preview Tanda Tangan Pejabat --}}
+            @if($approval->status->value === 'aktif')
+                @php
+                    $warga = auth()->user()->warga;
+                    $activeWj = $warga?->activeWargaJabatan?->firstWhere('jabatan_id', $approval->jabatan_id);
+                    $hasTtd = $activeWj && $activeWj->tanda_tangan_path;
+                    
+                    // Cek apakah ada konfigurasi signature placement
+                    $sigPlacement = null;
+                    if ($approval->pengajuanSurat->jenisSurat) {
+                        $sigPlacement = $approval->pengajuanSurat->jenisSurat
+                            ->signaturePlacements
+                            ->firstWhere('jabatan_id', $approval->jabatan_id);
+                    }
+                @endphp
+
+                <div class="bg-white rounded-2xl border border-violet-200 shadow-sm p-6 space-y-4">
+                    <h3 class="text-sm font-bold text-violet-900 uppercase tracking-wider border-b border-violet-100 pb-2">Preview Tanda Tangan</h3>
+                    
+                    @if($hasTtd)
+                        <div class="flex items-start gap-4">
+                            <div class="flex-shrink-0">
+                                <div class="w-28 h-16 bg-slate-50 border border-slate-200 rounded-lg flex items-center justify-center overflow-hidden">
+                                    <img src="{{ Storage::url($activeWj->tanda_tangan_path) }}" alt="Tanda Tangan" class="max-w-full max-h-full object-contain">
+                                </div>
+                                <p class="text-[10px] text-slate-400 text-center mt-1">Tanda tangan Anda</p>
+                            </div>
+                            <div class="flex-1 text-xs space-y-1.5">
+                                <p class="text-slate-700">
+                                    <span class="font-semibold">Nama:</span> {{ auth()->user()->name }}
+                                </p>
+                                <p class="text-slate-700">
+                                    <span class="font-semibold">Jabatan:</span> {{ $approval->nama_jabatan_snapshot }}
+                                </p>
+                                @if($sigPlacement && $sigPlacement->isConfigured())
+                                    <div class="mt-2 p-2 rounded-lg bg-emerald-50 border border-emerald-200">
+                                        <p class="text-emerald-700 font-semibold text-[10px]">
+                                            <svg class="w-3 h-3 inline-block mr-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
+                                            Tanda tangan akan otomatis ditempatkan di dokumen saat Anda menyetujui
+                                        </p>
+                                        @if($sigPlacement->placeholder_text)
+                                            <p class="text-emerald-600 text-[10px] mt-0.5">Posisi: placeholder <code class="bg-emerald-100 px-1 rounded">{{ $sigPlacement->placeholder_text }}</code></p>
+                                        @elseif($sigPlacement->pos_x !== null)
+                                            <p class="text-emerald-600 text-[10px] mt-0.5">Posisi: X={{ $sigPlacement->pos_x }}mm, Y={{ $sigPlacement->pos_y }}mm, Halaman {{ $sigPlacement->halaman ?? 1 }}</p>
+                                        @endif
+                                    </div>
+                                @else
+                                    <div class="mt-2 p-2 rounded-lg bg-amber-50 border border-amber-200">
+                                        <p class="text-amber-700 text-[10px]">
+                                            <svg class="w-3 h-3 inline-block mr-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01" /></svg>
+                                            Posisi tanda tangan belum dikonfigurasi untuk jenis surat ini. Tanda tangan tidak akan otomatis ditempatkan.
+                                        </p>
+                                    </div>
+                                @endif
+                            </div>
+                        </div>
+                    @else
+                        <div class="p-4 rounded-xl bg-rose-50 border border-rose-200 text-center">
+                            <svg class="w-8 h-8 mx-auto text-rose-400 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
+                            <p class="text-xs font-semibold text-rose-700">Anda belum mengunggah tanda tangan digital</p>
+                            <p class="text-[10px] text-rose-500 mt-0.5">Tanda tangan dapat diunggah melalui pengaturan profil jabatan Anda. Proses persetujuan tetap bisa dilanjutkan tanpa stamp tanda tangan otomatis.</p>
+                        </div>
+                    @endif
                 </div>
             @endif
 

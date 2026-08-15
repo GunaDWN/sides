@@ -1,6 +1,6 @@
-<div class="space-y-6 max-w-4xl mx-auto">
+<div class="space-y-6">
     <!-- Header -->
-    <div class="flex items-center justify-between">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-4">
         <div>
             <a href="{{ route('admin.approval-akun') }}" wire:navigate class="text-xs font-semibold text-emerald-600 hover:underline inline-flex items-center gap-1 mb-1">
                 &larr; Kembali ke Daftar
@@ -8,7 +8,7 @@
             <h1 class="text-2xl font-bold text-slate-900">Detail Pengajuan Registrasi</h1>
             <p class="text-xs text-slate-500 font-mono">Kode Registrasi: {{ $registrasi->kode_registrasi }}</p>
         </div>
-        <span class="px-3 py-1 rounded-full text-xs font-bold border {{ $registrasi->status->badgeClass() }}">
+        <span class="px-3 py-1 rounded-full text-xs font-bold border {{ $registrasi->status->badgeClass() }} self-start sm:self-auto">
             {{ $registrasi->status->label() }}
         </span>
     </div>

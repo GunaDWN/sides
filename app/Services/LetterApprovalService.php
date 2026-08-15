@@ -15,6 +15,9 @@ use Illuminate\Support\Str;
 
 class LetterApprovalService
 {
+    public function __construct(
+        protected SignatureStampService $signatureStampService
+    ) {}
     /**
      * Create a new pengajuan surat by Warga
      */
@@ -230,8 +233,20 @@ class LetterApprovalService
                 $dokumenVersiId = $newDoc->id;
             }
 
-            // Get WargaJabatan if present
+            // Get WargaJabatan if present (from user, or active official for this jabatan in this desa)
             $activeWj = $pejabatUser->getActiveJabatans()->where('jabatan_id', $currentApproval->jabatan_id)->first();
+            if (!$activeWj) {
+                $activeWj = \App\Models\WargaJabatan::where('jabatan_id', $currentApproval->jabatan_id)
+                    ->where('status', 'aktif')
+                    ->whereHas('warga', fn($q) => $q->where('desa_id', $pengajuan->desa_id))
+                    ->first()
+                    ?? \App\Models\WargaJabatan::where('jabatan_id', $currentApproval->jabatan_id)
+                        ->where('status', 'aktif')
+                        ->latest()
+                        ->first();
+            }
+
+            $namaPejabatSnapshot = $activeWj?->warga?->nama ?? $pejabatUser->name;
 
             if ($decision === 'terima') {
                 $currentApproval->update([
@@ -241,8 +256,15 @@ class LetterApprovalService
                     'processed_at' => now(),
                     'processed_by' => $pejabatUser->id,
                     'warga_jabatan_id' => $activeWj?->id,
-                    'nama_pejabat_snapshot' => $pejabatUser->name,
+                    'nama_pejabat_snapshot' => $namaPejabatSnapshot,
                 ]);
+
+                // Stamp tanda tangan pejabat ke dokumen
+                $latestDokumen = $pengajuan->latestDokumen;
+                if ($latestDokumen) {
+                    $currentApproval->refresh();
+                    $this->signatureStampService->stampSignature($latestDokumen, $currentApproval);
+                }
 
                 // Check next approval step
                 $nextApproval = $pengajuan->approvals()

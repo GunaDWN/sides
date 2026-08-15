@@ -1,11 +1,11 @@
-<div class="max-w-4xl mx-auto space-y-6">
-    <div class="flex items-center justify-between">
+<div class="space-y-6">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-4">
         <div>
             <a href="{{ route('warga.riwayat-pengajuan') }}" wire:navigate class="text-xs font-semibold text-emerald-600 hover:underline inline-flex items-center gap-1 mb-1">&larr; Kembali ke Riwayat</a>
             <h1 class="text-2xl font-bold text-slate-900">Detail Pengajuan Surat</h1>
             <p class="text-xs text-slate-500 font-mono">{{ $pengajuan->nomor_pengajuan }}</p>
         </div>
-        <span class="px-3 py-1 rounded-full text-xs font-bold border {{ $pengajuan->status->badgeClass() }}">{{ $pengajuan->status->label() }}</span>
+        <span class="px-3 py-1 rounded-full text-xs font-bold border {{ $pengajuan->status->badgeClass() }} self-start sm:self-auto">{{ $pengajuan->status->label() }}</span>
     </div>
 
     @if(session('success'))
@@ -106,16 +106,23 @@
                 <h3 class="text-sm font-bold text-slate-900 uppercase tracking-wider border-b border-slate-100 pb-2">Riwayat Versi Dokumen</h3>
                 <div class="space-y-2 max-h-60 overflow-y-auto pr-1">
                     @foreach($pengajuan->dokumens as $doc)
-                        <div class="p-3 rounded-xl bg-slate-50 border border-slate-200 text-xs space-y-1 {{ $doc->is_latest ? 'ring-2 ring-emerald-300' : '' }}">
+                        <div class="p-3 rounded-xl {{ $doc->signed_file_path ? 'bg-emerald-50/50 border border-emerald-200' : 'bg-slate-50 border border-slate-200' }} text-xs space-y-1 {{ $doc->is_latest ? 'ring-2 ring-emerald-400' : '' }}">
                             <div class="flex items-center justify-between">
                                 <span class="font-bold text-slate-800">Versi {{ $doc->versi }}</span>
-                                @if($doc->is_latest)<span class="px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-700 text-[10px] font-bold">TERBARU</span>@endif
+                                <div class="flex items-center gap-1">
+                                    @if($doc->signed_file_path)
+                                        <span class="px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 text-[10px] font-bold">✓ TTD RESMI</span>
+                                    @endif
+                                    @if($doc->is_latest)
+                                        <span class="px-1.5 py-0.5 rounded bg-sky-100 text-sky-700 text-[10px] font-bold">TERBARU</span>
+                                    @endif
+                                </div>
                             </div>
-                            <p class="text-slate-500 truncate">{{ $doc->nama_file_asli }}</p>
+                            <p class="text-slate-700 font-medium truncate">{{ $doc->nama_file_asli }}</p>
                             <p class="text-[10px] text-slate-400">{{ ucfirst($doc->sumber) }} • {{ $doc->uploadedBy->name ?? '-' }} • {{ $doc->created_at->format('d/m/Y H:i') }}</p>
-                            <a href="{{ route('download.dokumen', $doc->id) }}" target="_blank" class="inline-flex items-center gap-1 text-emerald-600 hover:text-emerald-700 font-semibold mt-1">
+                            <a href="{{ route('download.dokumen', $doc->id) }}" target="_blank" class="inline-flex items-center gap-1 text-emerald-600 hover:text-emerald-700 font-bold mt-1">
                                 <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
-                                Unduh
+                                {{ $doc->signed_file_path ? 'Unduh Surat Bertanda Tangan (PDF)' : 'Unduh Dokumen' }}
                             </a>
                         </div>
                     @endforeach

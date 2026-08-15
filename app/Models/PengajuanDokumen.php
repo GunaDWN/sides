@@ -13,6 +13,7 @@ class PengajuanDokumen extends Model
         'versi',
         'nama_file_asli',
         'file_path',
+        'signed_file_path',
         'file_extension',
         'mime_type',
         'file_size',

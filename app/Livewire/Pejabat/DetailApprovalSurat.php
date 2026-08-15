@@ -31,7 +31,7 @@ class DetailApprovalSurat extends Component
         }
 
         $this->approval = $approval->load([
-            'pengajuanSurat.jenisSurat',
+            'pengajuanSurat.jenisSurat.signaturePlacements',
             'pengajuanSurat.warga',
             'pengajuanSurat.desa',
             'pengajuanSurat.approvals.jabatan',

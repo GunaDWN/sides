@@ -74,4 +74,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/download/ktp/{registrasi}', [FileDownloadController::class, 'downloadKtp'])->name('download.ktp');
     Route::get('/download/template/{jenisSurat}', [FileDownloadController::class, 'downloadTemplate'])->name('download.template');
     Route::get('/download/dokumen/{dokumen}', [FileDownloadController::class, 'downloadDokumen'])->name('download.dokumen');
+    Route::get('/template-preview/{path}', [FileDownloadController::class, 'templatePreviewImage'])
+        ->where('path', '.*')
+        ->name('template.preview-image');
+    Route::get('/media/signature/{wargaJabatan}', [FileDownloadController::class, 'viewSignature'])->name('media.signature');
+    Route::get('/media/stamp/{wargaJabatan}', [FileDownloadController::class, 'viewStamp'])->name('media.stamp');
 });

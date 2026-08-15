@@ -64,4 +64,9 @@ class JenisSurat extends Model
     {
         return $this->hasMany(PengajuanSurat::class);
     }
+
+    public function signaturePlacements(): HasMany
+    {
+        return $this->hasMany(JenisSuratSignaturePlacement::class);
+    }
 }

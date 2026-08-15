@@ -6,6 +6,7 @@ use App\Models\Desa;
 use App\Models\Jabatan;
 use App\Models\Warga;
 use App\Models\WargaJabatan;
+use Illuminate\Support\Facades\Storage;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 use Livewire\WithPagination;
@@ -35,15 +36,20 @@ class WargaIndex extends Component
 
     public $showWargaModal = false;
 
-    // Form Assign Jabatan
+    // Form Jabatan, Tanda Tangan & Stempel
     public $showJabatanModal = false;
     public $selectedWargaForJabatan = null;
+    public $warga_jabatan_id = null;
     public $assign_jabatan_id = '';
     public $tanggal_mulai = '';
     public $tanggal_selesai = '';
     public $nomor_sk = '';
+    public $jabatan_status = 'aktif';
     public $tanda_tangan;
     public $stempel;
+    public $existing_tanda_tangan_path = null;
+    public $existing_stempel_path = null;
+    public $is_editing_jabatan = false;
 
     public function openWargaModal($id = null)
     {
@@ -114,10 +120,65 @@ class WargaIndex extends Component
     public function openJabatanModal($wargaId)
     {
         $this->resetValidation();
-        $this->reset(['assign_jabatan_id', 'tanggal_mulai', 'tanggal_selesai', 'nomor_sk', 'tanda_tangan', 'stempel']);
         $this->selectedWargaForJabatan = Warga::with(['desa', 'wargaJabatans.jabatan'])->findOrFail($wargaId);
-        $this->tanggal_mulai = now()->format('Y-m-d');
+        
+        $activeJabatan = $this->selectedWargaForJabatan->wargaJabatans->firstWhere('status', 'aktif') 
+            ?? $this->selectedWargaForJabatan->wargaJabatans->first();
+
+        if ($activeJabatan) {
+            $this->editJabatan($activeJabatan->id);
+        } else {
+            $this->createJabatanForm();
+        }
+
         $this->showJabatanModal = true;
+    }
+
+    public function createJabatanForm()
+    {
+        $this->resetValidation();
+        $this->reset([
+            'warga_jabatan_id',
+            'assign_jabatan_id',
+            'nomor_sk',
+            'tanda_tangan',
+            'stempel',
+            'existing_tanda_tangan_path',
+            'existing_stempel_path'
+        ]);
+        $this->tanggal_mulai = now()->format('Y-m-d');
+        $this->tanggal_selesai = '';
+        $this->jabatan_status = 'aktif';
+        $this->is_editing_jabatan = false;
+    }
+
+    public function editJabatan($wargaJabatanId)
+    {
+        $this->resetValidation();
+        $this->reset(['tanda_tangan', 'stempel']);
+        
+        $wj = WargaJabatan::findOrFail($wargaJabatanId);
+        $this->warga_jabatan_id = $wj->id;
+        $this->assign_jabatan_id = $wj->jabatan_id;
+        $this->tanggal_mulai = $wj->tanggal_mulai?->format('Y-m-d') ?? now()->format('Y-m-d');
+        $this->tanggal_selesai = $wj->tanggal_selesai?->format('Y-m-d') ?? '';
+        $this->nomor_sk = $wj->nomor_sk;
+        $this->jabatan_status = $wj->status;
+        $this->existing_tanda_tangan_path = $wj->tanda_tangan_path;
+        $this->existing_stempel_path = $wj->stempel_path;
+        $this->is_editing_jabatan = true;
+    }
+
+    public function removeExistingSignature()
+    {
+        $this->existing_tanda_tangan_path = null;
+        $this->tanda_tangan = null;
+    }
+
+    public function removeExistingStamp()
+    {
+        $this->existing_stempel_path = null;
+        $this->stempel = null;
     }
 
     public function saveJabatanWarga()
@@ -126,31 +187,101 @@ class WargaIndex extends Component
             'assign_jabatan_id' => 'required|exists:jabatans,id',
             'tanggal_mulai' => 'required|date',
             'tanggal_selesai' => 'nullable|date|after_or_equal:tanggal_mulai',
+            'jabatan_status' => 'required|in:aktif,selesai,nonaktif',
             'tanda_tangan' => 'nullable|image|max:2048',
             'stempel' => 'nullable|image|max:2048',
         ], [
             'tanggal_selesai.after_or_equal' => 'Tanggal selesai tidak boleh sebelum tanggal mulai.',
+            'assign_jabatan_id.required' => 'Pilih jabatan terlebih dahulu.',
         ]);
 
-        $ttdPath = $this->tanda_tangan ? $this->tanda_tangan->store('signatures', 'local') : null;
-        $stempelPath = $this->stempel ? $this->stempel->store('stamps', 'local') : null;
+        if ($this->warga_jabatan_id) {
+            $wj = WargaJabatan::findOrFail($this->warga_jabatan_id);
 
-        WargaJabatan::create([
-            'warga_id' => $this->selectedWargaForJabatan->id,
-            'jabatan_id' => $this->assign_jabatan_id,
-            'tanggal_mulai' => $this->tanggal_mulai,
-            'tanggal_selesai' => $this->tanggal_selesai ?: null,
-            'nomor_sk' => $this->nomor_sk,
-            'tanda_tangan_path' => $ttdPath,
-            'stempel_path' => $stempelPath,
-            'status' => 'aktif',
+            $ttdPath = $wj->tanda_tangan_path;
+            if ($this->tanda_tangan) {
+                if ($ttdPath && Storage::disk('local')->exists($ttdPath)) {
+                    Storage::disk('local')->delete($ttdPath);
+                }
+                $ttdPath = $this->tanda_tangan->store('signatures', 'local');
+            } elseif ($this->existing_tanda_tangan_path === null && $ttdPath) {
+                if (Storage::disk('local')->exists($ttdPath)) {
+                    Storage::disk('local')->delete($ttdPath);
+                }
+                $ttdPath = null;
+            }
+
+            $stempelPath = $wj->stempel_path;
+            if ($this->stempel) {
+                if ($stempelPath && Storage::disk('local')->exists($stempelPath)) {
+                    Storage::disk('local')->delete($stempelPath);
+                }
+                $stempelPath = $this->stempel->store('stamps', 'local');
+            } elseif ($this->existing_stempel_path === null && $stempelPath) {
+                if (Storage::disk('local')->exists($stempelPath)) {
+                    Storage::disk('local')->delete($stempelPath);
+                }
+                $stempelPath = null;
+            }
+
+            $wj->update([
+                'jabatan_id' => $this->assign_jabatan_id,
+                'tanggal_mulai' => $this->tanggal_mulai,
+                'tanggal_selesai' => $this->tanggal_selesai ?: null,
+                'nomor_sk' => $this->nomor_sk,
+                'status' => $this->jabatan_status,
+                'tanda_tangan_path' => $ttdPath,
+                'stempel_path' => $stempelPath,
+            ]);
+
+            session()->flash('success', 'Data jabatan, tanda tangan & stempel berhasil diperbarui!');
+        } else {
+            $ttdPath = $this->tanda_tangan ? $this->tanda_tangan->store('signatures', 'local') : null;
+            $stempelPath = $this->stempel ? $this->stempel->store('stamps', 'local') : null;
+
+            WargaJabatan::create([
+                'warga_id' => $this->selectedWargaForJabatan->id,
+                'jabatan_id' => $this->assign_jabatan_id,
+                'tanggal_mulai' => $this->tanggal_mulai,
+                'tanggal_selesai' => $this->tanggal_selesai ?: null,
+                'nomor_sk' => $this->nomor_sk,
+                'status' => $this->jabatan_status,
+                'tanda_tangan_path' => $ttdPath,
+                'stempel_path' => $stempelPath,
+            ]);
+
+            session()->flash('success', 'Jabatan, tanda tangan & stempel baru berhasil ditetapkan!');
+        }
+
+        // Update Warga type to warga_dengan_jabatan if has active jabatan
+        $hasActive = WargaJabatan::where('warga_id', $this->selectedWargaForJabatan->id)
+            ->where('status', 'aktif')
+            ->exists();
+
+        $this->selectedWargaForJabatan->update([
+            'jenis_warga' => $hasActive ? 'warga_dengan_jabatan' : 'warga_biasa'
         ]);
 
-        // Update Warga type to warga_dengan_jabatan
-        $this->selectedWargaForJabatan->update(['jenis_warga' => 'warga_dengan_jabatan']);
-
-        session()->flash('success', 'Jabatan berhasil ditetapkan untuk warga!');
         $this->showJabatanModal = false;
+    }
+
+    public function deleteJabatan($wargaJabatanId)
+    {
+        $wj = WargaJabatan::findOrFail($wargaJabatanId);
+        $wargaId = $wj->warga_id;
+        $wj->delete();
+
+        $hasActive = WargaJabatan::where('warga_id', $wargaId)
+            ->where('status', 'aktif')
+            ->exists();
+
+        Warga::where('id', $wargaId)->update([
+            'jenis_warga' => $hasActive ? 'warga_dengan_jabatan' : 'warga_biasa'
+        ]);
+
+        $this->selectedWargaForJabatan = Warga::with(['desa', 'wargaJabatans.jabatan'])->find($wargaId);
+        $this->createJabatanForm();
+        session()->flash('success', 'Jabatan berhasil dihapus dari riwayat.');
     }
 
     public function render()
@@ -159,7 +290,7 @@ class WargaIndex extends Component
             abort(403);
         }
 
-        $query = Warga::query()->with(['desa', 'activeWargaJabatan.jabatan']);
+        $query = Warga::query()->with(['desa', 'activeWargaJabatan.jabatan', 'wargaJabatans.jabatan']);
 
         if ($this->search) {
             $s = '%' . trim($this->search) . '%';
